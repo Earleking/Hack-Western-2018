@@ -10,8 +10,8 @@ const request = require("request");
 
 const api_key = 'AIzaSyDANwPhX_FnU9N9O275zvCz78U4ta7oqDk';
 const sites = ["www.nytimes.com",
-            "www.wsj.com",
-            "www.washingtonpost.com"];
+    "www.wsj.com",
+    "www.washingtonpost.com"];
 
 function run(url) {
     fetchWebsite(url);
@@ -34,7 +34,7 @@ function fetchWebsite(url) {
     });
 };
 
-function getKeywords(data, callback){
+function getKeywords(data, callback) {
     var parameters = {
         'text': data,
         'features': {
@@ -44,7 +44,7 @@ function getKeywords(data, callback){
                 'limit': 5
             }
         }
-    }
+    };
 
     var keywords_list = [];
     natural_language_understanding.analyze(parameters, function (err, response) {
@@ -53,45 +53,66 @@ function getKeywords(data, callback){
         else
             //console.log(JSON.stringify(response.keywords.length));
 
-            for(var i = 0; i < response.keywords.length; i ++){
-                if(JSON.stringify(response.keywords[0].relevance) >= 0.6){
+            for (var i = 0; i < response.keywords.length; i++) {
+                if (JSON.stringify(response.keywords[0].relevance) >= 0.6) {
                     keywords_list.push(JSON.stringify(response.keywords[i].text));
                     console.log(keywords_list[i]);
                 }
             }
-            if(callback){
-                callback(keywords_list);
-            }
+        if (callback) {
+            callback(keywords_list);
+        }
     });
 
     // return keywords_list;
 }
 
-            
+
 async function getArticlesByTags(tags, date, callback) {
     var query = "";
-    for(var i of tags) {
-        i.replace(" ", '+');
-        query += i + "+";
+
+    // for loop to convert tags into query string.
+    // ATTENTION: I made a change here so 'United States' becomes 'United+States' in the query string.
+    for (var i of tags) {
+        x = i.replace(" ", '+');
+        query += x + "+";
     }
-    query = query.substring(0, query.length-1);
+
+    // eliminate null terminator.
+    query = query.substring(0, query.length - 1);
+
+    // start date for reference
+    var startDate = new Date(date);
+    var endDate = new Date(date)
 
     // make date
     date = transformDate(date);
 
-    return;
-    for(var site of sites) {
+    startDate.setDate(startDate.getDate() - 7);
+    startDate = transformDate(startDate.toString());
+
+    endDate.setDate(endDate.getDate() + 7);
+    endDate = transformDate(endDate.toString());
+
+    // construct search queries for our chosen sites.
+    // These are credible sites that we'll use to ascertain the accurate consensus.
+    for (var site of sites) {
         var url = `https://www.googleapis.com/customsearch/v1?q=${query}
-        &cx=017124586449627225173%3Ag2noxtlpwrc&siteSearch=${site}&key=${api_key}`;
+        &cx=017124586449627225173%3Ag2noxtlpwrc&siteSearch=${site}
+        &sort=date:r:${startDate}:${endDate}&key=${api_key}`;
         console.log(url);
-        return;
+
+        // removed return statement here.
+
         request.get(url, (err, res, data) => {
-            if(err)
+            if (err)
                 console.log(err);
             data = JSON.parse(data);
             data = data["items"];
             var bestResult = data[0];
-            var bestUrl = bestResult["link"];
+            // var bestUrl = bestResult["link"];
+
+            console.log(bestResult);
             // verifySimilarity(bestUrl);
             // TODO do stuff with similarity
 
@@ -115,17 +136,17 @@ const months = {
 }
 
 function transformDate(date) {
-    date = date.substring(5);
+    date = date.substring(4); // start from the day of the month
     console.log(date);
     var vals = date.split(" ");
     var finalDate = "";
-    finalDate += vals[2];
-    console.log(vals[1]);
-    finalDate += months[vals[1]];
-    finalDate += vals[0];
+    finalDate += vals[2]; // this is the year -- 2018
+    console.log(vals[0]); // this prints the three-character month
+    finalDate += months[vals[0]]; // append the numerical month.
+    finalDate += vals[1]; // append the day of the the month.
     return finalDate;
 }
-console.log(transformDate("Fri, 23 Nov 2018 16:49:00 GMT"));
-// getArticlesByTags([ 'Climate', 'United States' ], "Fri, 23 Nov 2018 16:49:00 GMT");
+console.log(transformDate("Fri Nov 23 2018 16:49:00 GMT-0500"));
+getArticlesByTags(['Climate', 'United States'], "Fri Nov 23 2018 16:49:00 GMT-0500");
 
 // run('https://www.washingtonpost.com/energy-environment/2018/11/23/major-trump-administration-climate-report-says-damages-are-intensifying-across-country/?fbclid=IwAR3EhosV4TexFZJ4HTvm80k8fIbciRsQtIbF3apTin_2fKVZmFFHv4bK6q8&noredirect=on&utm_term=.8ec6789a966d');
