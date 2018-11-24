@@ -4,7 +4,7 @@ var natural_language_understanding = new NaturalLanguageUnderstandingV1({
     'iam_apikey': "QhHkZQwZquq60Je3wUq6yGO_S23J3NjdH-5qtHO-mpMX",
     'url': "https://gateway-wdc.watsonplatform.net/natural-language-understanding/api"
 });
-
+const Diffbot = require('diffbot').Diffbot;
 
 const request = require("request");
 
@@ -18,8 +18,8 @@ function run(url) {
 }
 
 function fetchWebsite(url) {
-    var Diffbot = require('diffbot').Diffbot
-    var diffbot = new Diffbot('3a1e3c50b771dc4c9f95500511117cba')
+    
+    var diffbot = new Diffbot('3a1e3c50b771dc4c9f95500511117cba');
 
     diffbot.article({
         uri: url
@@ -110,14 +110,42 @@ async function getArticlesByTags(tags, date, callback) {
             data = JSON.parse(data);
             data = data["items"];
             var bestResult = data[0];
-            // var bestUrl = bestResult["link"];
+            var bestUrl = bestResult["link"];
 
-            console.log(bestResult);
-            // verifySimilarity(bestUrl);
+            // console.log(bestResult); -- if you want to see the full return for the best results.
+            // console.log(bestUrl); -- if you want to see what the best URLs are
+            verifySimilarity(bestUrl); // bestUrl consists of 3 URLs, for each target website.
             // TODO do stuff with similarity
 
         });
     }
+}
+
+function verifySimilarity(urlList)
+{
+    var diffbot = new Diffbot('3a1e3c50b771dc4c9f95500511117cba');
+
+    var tagsList = [];
+
+    console.log(urlList);
+
+    for(var url of urlList)
+    {
+        console.log(url); // Need to separate this out into urls.
+
+        diffbot.article({
+            uri: url
+        }, function (err, response) {
+            var data = response["objects"][0]["text"];
+            var date = response["objects"][0]["date"];
+            getKeywords(data, (tags) => {
+                // getArticlesByTags(tags, date);
+                tagsList.push(tags);
+            });
+        });
+    }
+
+    console.log(tagsList);
 }
 
 const months = {
