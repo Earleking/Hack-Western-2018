@@ -8,7 +8,7 @@ const Diffbot = require('diffbot').Diffbot;
 
 const request = require("request");
 
-const api_key = 'AIzaSyDANwPhX_FnU9N9O275zvCz78U4ta7oqDk';
+const api_key = 'AIzaSyCohPaZzc8fKEWkfb8Y_v1V4K4hNIkpSrU';
 const sites = ["www.nytimes.com",
     "www.wsj.com",
     "www.washingtonpost.com"];
