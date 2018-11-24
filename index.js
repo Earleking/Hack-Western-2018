@@ -1,3 +1,4 @@
+function fetchWebsite(){
 var Diffbot = require('diffbot').Diffbot
 var diffbot = new Diffbot('3a1e3c50b771dc4c9f95500511117cba')
 
@@ -7,4 +8,4 @@ diffbot.article({uri: 'https://www.washingtonpost.com/energy-environment/2018/11
 
   if (response.media)
     console.log(JSON.stringify(response.media));
-});
+})};
